@@ -1,15 +1,13 @@
 import './App.css'
-import Map from './components/Map'
-import { QueryClient, QueryClientProvider } from 'react-query'
+import RestaurantMap from './components/Map'
 
-const queryClient = new QueryClient()
+const companyName = "ComplyCube";
+const companyPosition: [number, number] = [51.5074, -0.1278]; 
 
 function App() {
   return (
     <div className="App">
-      <QueryClientProvider client={queryClient}>
-        <Map />
-      </QueryClientProvider>
+        <RestaurantMap companyName={companyName} companyPosition={companyPosition} />
     </div>
   )
 }
