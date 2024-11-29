@@ -1,5 +1,5 @@
 import './App.css'
-import RestaurantMap from './components/Map'
+import RestaurantMap from './components/restaurant-map'
 
 const companyName = "ComplyCube";
 const companyPosition: [number, number] = [51.5074, -0.1278]; 
