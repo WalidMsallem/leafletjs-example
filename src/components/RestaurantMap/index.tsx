@@ -20,7 +20,9 @@ const RestaurantMap: FC<{ companyPosition: [number, number]; companyName: string
 
   const { data: places, isLoading, error } = useFetchPlaces(
     companyPosition[0],
-    companyPosition[1]
+    companyPosition[1],
+    'restaurant', // Amenity type
+    1000 // Search radius in meters
   );
 
   // Store references to markers
