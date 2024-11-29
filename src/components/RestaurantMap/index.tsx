@@ -1,6 +1,6 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { CircularProgress, Box, Typography, Grid, TextField } from '@mui/material';
+import { CircularProgress, Box, Typography, TextField } from '@mui/material';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import { ICONS } from './constants';
 import { getTagColor } from './utils';
@@ -22,6 +22,9 @@ const RestaurantMap: FC<{ companyPosition: [number, number]; companyName: string
     companyPosition[0],
     companyPosition[1]
   );
+
+  // Store references to markers
+  const markersRef = useRef<Map<number, L.Marker>>(new Map());
 
   if (isLoading) {
     return (
@@ -68,7 +71,13 @@ const RestaurantMap: FC<{ companyPosition: [number, number]; companyName: string
         }}
         onClick={() => {
           setSelectedPlace(place);
-          setMapZoom(18); // Zoom in when a restaurant is selected
+          setMapZoom(18);
+
+          // Open the popup for the corresponding marker
+          const marker = markersRef.current.get(place.id);
+          if (marker) {
+            marker.openPopup();
+          }
         }}
       >
         <Typography
@@ -154,6 +163,9 @@ const RestaurantMap: FC<{ companyPosition: [number, number]; companyName: string
               key={place.id}
               position={[place.lat, place.lon]}
               icon={ICONS.restaurant}
+              ref={(marker) => {
+                if (marker) markersRef.current.set(place.id, marker); // Save marker reference
+              }}
             >
               <Popup>
                 <Box sx={{ textAlign: 'center' }}>
