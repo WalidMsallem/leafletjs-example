@@ -6,9 +6,19 @@ const DynamicMapView: FC<{ center: [number, number]; zoom: number }> = ({
   zoom,
 }) => {
   const map = useMap();
+
   React.useEffect(() => {
-    map.setView(center, zoom);
+    if (map) {
+      map.whenReady(() => {
+        // Fly to the specified center and zoom once the map is ready
+        map.flyTo(center, zoom, {
+          animate: true,
+          duration: 1.5, // Animation duration in seconds
+        });
+      });
+    }
   }, [center, zoom, map]);
+
   return null;
 };
 

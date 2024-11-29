@@ -1,6 +1,5 @@
 import React, { FC, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
 import { CircularProgress, Box, Typography, Grid, TextField } from '@mui/material';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import { ICONS } from './constants';
@@ -9,12 +8,15 @@ import { useFetchPlaces } from '../../hooks/use-fetch-places';
 import DynamicMapView from '../DynamicMapView';
 import { Place } from '../../types/Place';
 
+import 'leaflet/dist/leaflet.css';
+
 const RestaurantMap: FC<{ companyPosition: [number, number]; companyName: string }> = ({
   companyPosition,
   companyName,
 }) => {
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [mapZoom, setMapZoom] = useState(15); // Track current zoom level
 
   const { data: places, isLoading, error } = useFetchPlaces(
     companyPosition[0],
@@ -63,9 +65,11 @@ const RestaurantMap: FC<{ companyPosition: [number, number]; companyName: string
           backgroundColor:
             selectedPlace?.id === place.id ? '#f0f8ff' : 'transparent',
           borderBottom: '1px solid #ddd',
-          paddingTop: "10px"
         }}
-        onClick={() => setSelectedPlace(place)}
+        onClick={() => {
+          setSelectedPlace(place);
+          setMapZoom(18); // Zoom in when a restaurant is selected
+        }}
       >
         <Typography
           variant="h6"
@@ -84,12 +88,16 @@ const RestaurantMap: FC<{ companyPosition: [number, number]; companyName: string
   };
 
   return (
-    <Grid container sx={{ height: '100vh' }}>
+    <Box sx={{ display: 'flex', height: '100vh' }}>
       {/* Sidebar */}
-      <Grid
-        item
-        xs={4}
-        sx={{ overflowY: 'hidden', padding: 2, background: '#f5f5f5' }}
+      <Box
+        sx={{
+          width: '30%',
+          overflowY: 'auto',
+          padding: 2,
+          background: '#f5f5f5',
+          borderRight: '1px solid #ddd',
+        }}
       >
         <Typography variant="h5" sx={{ mb: 2 }}>
           Places near {companyName}
@@ -110,11 +118,15 @@ const RestaurantMap: FC<{ companyPosition: [number, number]; companyName: string
         >
           {renderRow}
         </FixedSizeList>
-      </Grid>
+      </Box>
 
       {/* Map */}
-      <Grid item xs={8}>
-        <MapContainer style={{ height: '100%', width: '100%' }}>
+      <Box sx={{ flex: 1 }}>
+        <MapContainer
+          style={{ height: '100%', width: '100%' }}
+          center={companyPosition}
+          zoom={15}
+        >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -125,7 +137,7 @@ const RestaurantMap: FC<{ companyPosition: [number, number]; companyName: string
                 ? [selectedPlace.lat, selectedPlace.lon]
                 : companyPosition
             }
-            zoom={15}
+            zoom={selectedPlace ? mapZoom : 15}
           />
 
           {/* Headquarters Marker */}
@@ -176,8 +188,8 @@ const RestaurantMap: FC<{ companyPosition: [number, number]; companyName: string
             </Marker>
           ))}
         </MapContainer>
-      </Grid>
-    </Grid>
+      </Box>
+    </Box>
   );
 };
 
