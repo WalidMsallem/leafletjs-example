@@ -1,13 +1,15 @@
-// types/Place.ts
-
 export type Place = {
     id: number;
     lat: number;
     lon: number;
     tags: {
-      name?: string;
+      amenity?: string;
       cuisine?: string;
-      [key: string]: string | undefined; // For any additional unknown tags
+      name?: string;
+      website?: string;
+      phone?: string;
+      address?: string;
+      [key: string]: any;
     };
   };
   

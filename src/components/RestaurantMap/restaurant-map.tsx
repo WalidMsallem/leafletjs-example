@@ -1,20 +1,20 @@
-import React, { FC, useState } from 'react'
-import { useQuery } from 'react-query'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
-import 'leaflet/dist/leaflet.css'
-import L from 'leaflet'
-import axios from 'axios'
+import React, { FC, useState } from 'react';
+import { useQuery } from 'react-query';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import axios from 'axios';
 import {
   CircularProgress,
   Box,
   Typography,
   Grid,
   TextField,
-} from '@mui/material'
-import { FixedSizeList, ListChildComponentProps } from 'react-window'
+} from '@mui/material';
+import { FixedSizeList, ListChildComponentProps } from 'react-window';
 
-// Load custom icons
-const icons = {
+// Constants and Utilities
+const ICONS = {
   headquarters: new L.Icon({
     iconUrl: 'https://cdn-icons-png.flaticon.com/512/167/167707.png',
     iconSize: [40, 40],
@@ -34,33 +34,36 @@ const icons = {
     iconAnchor: [15, 30],
     popupAnchor: [0, -30],
   }),
-}
+};
 
-// Assign colors for tags (e.g., cuisine types)
-const tagColors: Record<string, string> = {
-  italian: '#FF5733', // Example color for Italian cuisine
+const TAG_COLORS: Record<string, string> = {
+  italian: '#FF5733',
   pizza: '#33FF57',
   asian: '#3357FF',
   default: '#AAAAAA',
-}
+};
 
-// Define a type for Place
+const getTagColor = (cuisine?: string): string => {
+  return TAG_COLORS[cuisine?.toLowerCase() || 'default'] || TAG_COLORS.default;
+};
+
+// Types
 export type Place = {
-  id: number
-  lat: number
-  lon: number
+  id: number;
+  lat: number;
+  lon: number;
   tags: {
-    amenity?: string
-    cuisine?: string
-    name?: string
-    website?: string
-    phone?: string
-    address?: string
-    [key: string]: any
-  }
-}
+    amenity?: string;
+    cuisine?: string;
+    name?: string;
+    website?: string;
+    phone?: string;
+    address?: string;
+    [key: string]: any;
+  };
+};
 
-// Custom hook for fetching places
+// Custom Hook
 const useFetchPlaces = (latitude: number, longitude: number) => {
   return useQuery<Place[]>(
     ['places', latitude, longitude],
@@ -69,45 +72,42 @@ const useFetchPlaces = (latitude: number, longitude: number) => {
         [out:json];
         node["amenity"="restaurant"](around:1000, ${latitude}, ${longitude});
         out;
-      `
+      `;
       const response = await axios.post(
         'https://overpass-api.de/api/interpreter',
         query,
-        {
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        }
-      )
-      return response.data.elements
+        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      );
+      return response.data.elements;
     },
     { initialData: [] }
-  )
-}
+  );
+};
 
-// Map view adjustment hook
+// Dynamic Map View Component
 const DynamicMapView: FC<{ center: [number, number]; zoom: number }> = ({
   center,
   zoom,
 }) => {
-  const map = useMap()
+  const map = useMap();
   React.useEffect(() => {
-    map.setView(center, zoom)
-  }, [center, zoom, map])
-  return null
-}
+    map.setView(center, zoom);
+  }, [center, zoom, map]);
+  return null;
+};
 
-// Main Map Component
-const MapComponent: FC<{
-  companyPosition: [number, number]
-  companyName: string
-}> = ({ companyPosition, companyName }) => {
-  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
+// Main Restaurant Map Component
+const RestaurantMap: FC<{ companyPosition: [number, number]; companyName: string }> = ({
+  companyPosition,
+  companyName,
+}) => {
+  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const {
-    data: places,
-    isLoading,
-    error,
-  } = useFetchPlaces(companyPosition[0], companyPosition[1])
+  const { data: places, isLoading, error } = useFetchPlaces(
+    companyPosition[0],
+    companyPosition[1]
+  );
 
   if (isLoading) {
     return (
@@ -121,7 +121,7 @@ const MapComponent: FC<{
       >
         <CircularProgress />
       </Box>
-    )
+    );
   }
 
   if (error) {
@@ -129,23 +129,18 @@ const MapComponent: FC<{
       <Box sx={{ textAlign: 'center', color: 'red', marginTop: '2rem' }}>
         Error fetching data.
       </Box>
-    )
+    );
   }
 
-  // Filter places based on search query
   const filteredPlaces = places?.filter(
     (place) =>
       place.tags?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       place.tags?.cuisine?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
-
-  const getTagColor = (cuisine: string | undefined): string => {
-    return tagColors[cuisine?.toLowerCase() || 'default'] || tagColors.default
-  }
+  );
 
   const renderRow = ({ index, style }: ListChildComponentProps) => {
-    const place = filteredPlaces && filteredPlaces[index]
-    if (!place) return null
+    const place = filteredPlaces && filteredPlaces[index];
+    if (!place) return null;
 
     return (
       <Box
@@ -155,6 +150,7 @@ const MapComponent: FC<{
           cursor: 'pointer',
           backgroundColor:
             selectedPlace?.id === place.id ? '#f0f8ff' : 'transparent',
+          borderBottom: '1px solid #ddd',
         }}
         onClick={() => setSelectedPlace(place)}
       >
@@ -171,8 +167,8 @@ const MapComponent: FC<{
           Cuisine: {place.tags?.cuisine || 'Unknown'}
         </Typography>
       </Box>
-    )
-  }
+    );
+  };
 
   return (
     <Grid container sx={{ height: '100vh' }}>
@@ -220,7 +216,7 @@ const MapComponent: FC<{
           />
 
           {/* Headquarters Marker */}
-          <Marker position={companyPosition} icon={icons.headquarters}>
+          <Marker position={companyPosition} icon={ICONS.headquarters}>
             <Popup>
               <Typography variant="h6">{companyName}</Typography>
               <Typography variant="body2">Company Headquarters</Typography>
@@ -232,7 +228,7 @@ const MapComponent: FC<{
             <Marker
               key={place.id}
               position={[place.lat, place.lon]}
-              icon={icons.restaurant}
+              icon={ICONS.restaurant}
             >
               <Popup>
                 <Box sx={{ textAlign: 'center' }}>
@@ -262,11 +258,6 @@ const MapComponent: FC<{
                       Phone: {place.tags.phone}
                     </Typography>
                   )}
-                {place.tags?.address && (
-                    <Typography variant="body2">
-                      Address: {place.tags.address}
-                    </Typography>
-                  )}
                 </Box>
               </Popup>
             </Marker>
@@ -274,7 +265,7 @@ const MapComponent: FC<{
         </MapContainer>
       </Grid>
     </Grid>
-  )
-}
+  );
+};
 
-export default MapComponent
+export default RestaurantMap;
