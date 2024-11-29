@@ -36,6 +36,14 @@ const icons = {
   }),
 }
 
+// Assign colors for tags (e.g., cuisine types)
+const tagColors: Record<string, string> = {
+  italian: '#FF5733', // Example color for Italian cuisine
+  pizza: '#33FF57',
+  asian: '#3357FF',
+  default: '#AAAAAA',
+}
+
 // Define a type for Place
 export type Place = {
   id: number
@@ -71,7 +79,7 @@ const useFetchPlaces = (latitude: number, longitude: number) => {
       )
       return response.data.elements
     },
-    { initialData: [] } // Provide an empty array as the initial state
+    { initialData: [] }
   )
 }
 
@@ -131,11 +139,8 @@ const MapComponent: FC<{
       place.tags?.cuisine?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const getMarkerIcon = (place: Place): L.Icon => {
-    if (place.tags?.amenity === 'restaurant') {
-      return icons.restaurant // Restaurant icon
-    }
-    return icons.default // Default icon for other places
+  const getTagColor = (cuisine: string | undefined): string => {
+    return tagColors[cuisine?.toLowerCase() || 'default'] || tagColors.default
   }
 
   const renderRow = ({ index, style }: ListChildComponentProps) => {
@@ -148,14 +153,18 @@ const MapComponent: FC<{
         key={place.id}
         sx={{
           cursor: 'pointer',
-          padding: 2,
-          borderBottom: '1px solid #ddd', // Prevent overlapping
           backgroundColor:
             selectedPlace?.id === place.id ? '#f0f8ff' : 'transparent',
         }}
         onClick={() => setSelectedPlace(place)}
       >
-        <Typography variant="h6">
+        <Typography
+          variant="h6"
+          sx={{
+            color: getTagColor(place.tags?.cuisine),
+            fontWeight: 'bold',
+          }}
+        >
           {place.tags?.name || 'Unnamed Place'}
         </Typography>
         <Typography variant="body2" color="textSecondary">
@@ -223,11 +232,17 @@ const MapComponent: FC<{
             <Marker
               key={place.id}
               position={[place.lat, place.lon]}
-              icon={getMarkerIcon(place)}
+              icon={icons.restaurant}
             >
               <Popup>
                 <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 'bold',
+                      color: getTagColor(place.tags?.cuisine),
+                    }}
+                  >
                     {place.tags?.name || 'Unnamed Place'}
                   </Typography>
                   <Typography variant="body2">
@@ -247,7 +262,7 @@ const MapComponent: FC<{
                       Phone: {place.tags.phone}
                     </Typography>
                   )}
-                  {place.tags?.address && (
+                {place.tags?.address && (
                     <Typography variant="body2">
                       Address: {place.tags.address}
                     </Typography>
